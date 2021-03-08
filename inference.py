@@ -33,6 +33,8 @@ import tools.infer.predict_cls as predict_cls
 from ppocr.utils.utility import get_image_file_list, check_and_read_gif
 from ppocr.utils.logging import get_logger
 from tools.infer.utility import draw_ocr_box_txt
+from application import trainTicket, idcard
+from apphelper.image import xy_rotate_box
 
 logger = get_logger()
 
@@ -164,8 +166,32 @@ def main(args):
         if is_visualize:
             image = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
             boxes = dt_boxes
+
+            for box in boxes:
+                xy_sum = np.sum(box, axis=0) / 4.0
+                cx = xy_sum[0]
+                cy = xy_sum[1]
+                degree = np.arcsin((box[1][1] - box[0][1]) / (box[1][0] - box[0][0]))
+                w = abs(box[0][0] - box[1][0])
+                h = abs(box[0][1] - box[3][1])
+                x1, y1, x2, y2, x3, y3, x4, y4 = xy_rotate_box(cx, cy, w, h, degree / 180 * np.pi)
+                box[0][0] = x1
+                box[0][1] = y1
+                box[1][0] = x2
+                box[1][1] = y2
+                box[2][0] = x3
+                box[2][1] = y3
+                box[3][0] = x4
+                box[3][1] = y4
+
             txts = [rec_res[i][0] for i in range(len(rec_res))]
             scores = [rec_res[i][1] for i in range(len(rec_res))]
+
+            assorted_results = [{'box': dt_boxes[i], 'txt': rec_res[i][0]} for i in range(len(rec_res))]
+
+            res = trainTicket.trainTicket(assorted_results)
+            res = res.res
+            res = [{'text': res[key], 'name': key, 'box': {}} for key in res]
 
             draw_img = draw_ocr_box_txt(
                 image,
