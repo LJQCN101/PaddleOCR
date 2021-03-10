@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Aug  4 01:01:37 2019
-火车票识别
-@author: chineseocr
-"""
 from apphelper.image import union_rbox
 import re
 class trainTicket:
@@ -15,91 +10,96 @@ class trainTicket:
         self.result = union_rbox(result,0.2)
         self.N = len(self.result)
         self.res = {}
-        self.station()
+        self.address()
         self.time()
         self.price()
-        self.full_name()
         self.customer_num()
+        print(self.res)
         
-    def station(self):
-        """
-        安顺站K492贵阳站
-        re.findall('[一-龥]+站','安顺站K492贵阳站'),re.findall('[一-龥]+站(.+?)[][一-龥]+站','安顺站K492贵阳站')
-        
-        """
+    def address(self):
         station={}
+        relevant_info = False
+        occurence = 0
         for i in range(self.N):
             txt = self.result[i]['text'].replace(' ','')
             txt = txt.replace(' ','')
             
-            res = re.findall('[一-龥]+站',txt),re.findall('[一-龥]+站(.+?)[][一-龥]+站',txt)
-            if len(res[0])>1:
-                station['出发'],station['到达'] = res[0][0].replace('站',''),res[0][1].replace('站','')
-            if len(res[1])>0:
-                station['车次'] = res[1][0]
-                
-            if len(station)>0:
-                self.res.update(station)
+            relevant_res = re.findall('[一-龥]+地址',txt), re.findall('圖文+[一-龥]',txt)
+            if len(relevant_res[0]) > 0 or len(relevant_res[1]) > 0:
+                relevant_info = True
+
+            if relevant_info:
+                res = re.findall('[A-Z]{3,50}', txt)
+                if len(res)>0:
+                    occurence += 1
+                    station['Address' + str(occurence)] = txt + ' '
+                    self.res.update(station)
+            if occurence >= 5:
                 break
     
     def time(self):
-        """
-        提取日期 时间 
-        """
         time={}
+        relevant_info = False
         for i in range(self.N):
             txt = self.result[i]['text'].replace(' ','')
             txt = txt.replace(' ','')
+            relevant_res = re.findall('在此日期或之前', txt), re.findall('在此日期或之前+[一-龥]', txt)
+            if len(relevant_res[0]) or len(relevant_res[1]) > 0:
+                relevant_info = True
             ##匹配日期
-            res = re.findall('[0-9]{1,4}年[0-9]{1,2}月[0-9]{1,2}日',txt)
-            if len(res)>0:
-                time['date']  =res[0].replace('年','-').replace('月','-').replace('日','')
-                self.res.update(time)
-                break
+
+            if relevant_info:
+                res1, res2 = re.findall('[0-9]{1,4}年[0-9]{1,2}月[0-9]{1,2}日',txt), re.findall('[0-9]{1,4}/[0-9]{1,2}/[0-9]{1,2}',txt)
+                if len(res1)>0:
+                    time['date'] = res1[0].replace('年','-').replace('月','-').replace('日','')
+                    self.res.update(time)
+                    break
+                if len(res2)>0:
+                    time['date'] = res2[0]
+                    self.res.update(time)
+                    break
     
     def price(self):
-        """
-        车票价格
-        """
         price={}
+        relevant_info = False
         for i in range(self.N):
             txt = self.result[i]['text'].replace(' ','')
             txt = txt.replace(' ','')
-            ##车票价格
-            res = re.findall('\$[0-9]{1,4}.[0-9]{1,2}',txt)
-            if len(res)>0:
-                price['price']  =res[0].replace('$','')
-                self.res.update(price) 
-                break
+            ##价格
+
+            relevant_res = re.findall('付款通知', txt), re.findall('付款通知+[一-龥]', txt)
+            if len(relevant_res[0]) or len(relevant_res[1]) > 0:
+                relevant_info = True
+
+            if relevant_info:
+                res = re.findall('\$[0-9]{1,4}.[0-9]{1,2}',txt)
+                if len(res)>0:
+                    price['price']  =res[0].replace('$','')
+                    self.res.update(price)
+                    break
 
     def customer_num(self):
         customer_number = {}
+        relevant_info = False
         for i in range(self.N):
             txt = self.result[i]['text'].replace(' ', '')
             txt = txt.replace(' ', '')
 
-            res = re.findall('[0-9]{1,5}-[0-9]{1,5}-[0-9]{1,2}', txt), re.findall('[0-9]{10,12}', txt)
-            if len(res[0]) > 0:
-                customer_number['customer_number'] = res[0][0]
-                break
+            relevant_res = re.findall('用户號', txt), re.findall('[一-龥]+號', txt)
+            if len(relevant_res[0]) or len(relevant_res[1]) > 0:
+                relevant_info = True
 
-            if len(res[1]) > 0:
-                customer_number['customer_number'] = res[1][0]
-                break
-                
-    def full_name(self):
-        """
-        姓名
-        """
-        name={}
-        for i in range(self.N):
-            txt = self.result[i]['text'].replace(' ','')
-            txt = txt.replace(' ','')
-            ##车票价格
-            res = re.findall("MDM",txt)
-            if len(res)>0:
-                name['姓名']  =res[0]
-                self.res.update(name)                
+            if relevant_info:
+                res = re.findall('[0-9]{1,5}-[0-9]{1,5}-[0-9]{1,2}', txt), re.findall('[0-9]{11,15}', txt)
+                if len(res[0]) > 0:
+                    customer_number['customer_number'] = res[0][0]
+                    self.res.update(customer_number)
+                    break
+
+                if len(res[1]) > 0:
+                    customer_number['customer_number'] = res[1][0]
+                    self.res.update(customer_number)
+                    break
                 
                 
         
