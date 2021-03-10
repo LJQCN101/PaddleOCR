@@ -191,7 +191,6 @@ def main(args):
 
             res = trainTicket.trainTicket(assorted_results)
             res = res.res
-            res = [{'text': res[key], 'name': key, 'box': {}} for key in res]
 
             draw_img = draw_ocr_box_txt(
                 image,
