@@ -20,19 +20,24 @@ class trainTicket:
         station={}
         relevant_info = False
         occurence = 0
+        current_y = 0
         for i in range(self.N):
             txt = self.result[i]['text'].replace(' ','')
             txt = txt.replace(' ','')
-            
-            relevant_res = re.findall('[一-龥]+地址',txt), re.findall('圖文+[一-龥]',txt)
-            if len(relevant_res[0]) > 0 or len(relevant_res[1]) > 0:
+
+            relevant_res = re.findall('[一-龥]+地址',txt), re.findall('圖文+[一-龥]',txt), re.findall('Towngas',txt)
+            if len(relevant_res[0]) > 0 or len(relevant_res[1]) > 0 or len(relevant_res[2]) > 0:
                 relevant_info = True
 
             if relevant_info:
-                res = re.findall('[A-Z]{3,50}', txt)
+                res = re.findall('[A-Z]{2,50}', txt)
                 if len(res)>0:
-                    occurence += 1
-                    station['Address' + str(occurence)] = txt + ' '
+                    y = self.result[i]['cy']
+                    if current_y < y - 3.0 or current_y > y + 3.0:
+                        occurence += 1
+                        station['Address' + str(occurence)] = ''
+                        current_y = y
+                    station['Address' + str(occurence)] += self.result[i]['text'] + ' '
                     self.res.update(station)
             if occurence >= 5:
                 break
@@ -43,7 +48,7 @@ class trainTicket:
         for i in range(self.N):
             txt = self.result[i]['text'].replace(' ','')
             txt = txt.replace(' ','')
-            relevant_res = re.findall('在此日期或之前', txt), re.findall('在此日期或之前+[一-龥]', txt)
+            relevant_res = re.findall('請於', txt), re.findall('在此日期或之前+[一-龥]', txt)
             if len(relevant_res[0]) or len(relevant_res[1]) > 0:
                 relevant_info = True
             ##匹配日期
@@ -67,14 +72,18 @@ class trainTicket:
             txt = txt.replace(' ','')
             ##价格
 
-            relevant_res = re.findall('付款通知', txt), re.findall('付款通知+[一-龥]', txt)
+            relevant_res = re.findall('付款通知', txt), re.findall('付+[一-龥]', txt)
             if len(relevant_res[0]) or len(relevant_res[1]) > 0:
                 relevant_info = True
 
             if relevant_info:
-                res = re.findall('\$[0-9]{1,4}.[0-9]{1,2}',txt)
+                res, res2 = re.findall('\$[0-9]{1,4}.[0-9]{1,2}',txt), re.findall('[0-9]{1,4}.[0-9]{1,2}',txt)
                 if len(res)>0:
                     price['price']  =res[0].replace('$','')
+                    self.res.update(price)
+                    break
+                if len(res2)>0:
+                    price['price']  =res2[0]
                     self.res.update(price)
                     break
 
