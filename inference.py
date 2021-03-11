@@ -189,7 +189,7 @@ def main(args):
 
             assorted_results = [{'box': dt_boxes[i], 'txt': rec_res[i][0]} for i in range(len(rec_res))]
 
-            res = trainTicket.trainTicket(assorted_results)
+            res = trainTicket.trainTicket(assorted_results, img=image)
             res = res.res
 
             draw_img = draw_ocr_box_txt(
