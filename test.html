@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <title>Test PaddleOCR</title>
+    </head>
+    <body>
+        <form id="formElem">
+            file : <input type="file" name="image"><br />
+            <input type="submit" value="submit"><br />
+        </form>
+		<table id="myTable" border="2">
+		</table>
+    </body>
+</html>
+
+<script>
+  formElem.onsubmit = async (e) => {
+    e.preventDefault();
+
+    let response = await fetch('http://localhost:8000', {
+      method: 'POST',
+      body: new FormData(formElem)
+    });
+
+    let result = await response.json();
+	
+	console.log(result);
+	
+	var Table = document.getElementById("myTable");
+	Table.innerHTML = "";
+	
+
+	var x=document.getElementById('myTable').insertRow(0);
+	var y=x.insertCell(0);
+	y.innerHTML='Name: ' + result.Address1;
+	
+	var y=x.insertCell(1);
+	y.innerHTML='Customer Number: ' + result.customer_number;
+	
+	var x=document.getElementById('myTable').insertRow(1);
+	var y=x.insertCell(0);
+	y.innerHTML='Address 1: ' + result.Address2;
+	
+	var y=x.insertCell(1);
+	y.innerHTML='Due date: ' + result.date;
+	
+	var x=document.getElementById('myTable').insertRow(2);
+	var y=x.insertCell(0);
+	y.innerHTML='Address 2: ' + result.Address3;
+	
+	var y=x.insertCell(1);
+	y.innerHTML='Amount to pay: ' + result.price;
+	
+	
+	var x=document.getElementById('myTable').insertRow(3);
+	var y=x.insertCell(0);
+	y.innerHTML='Address 3: ' + result.Address4;
+	
+	var x=document.getElementById('myTable').insertRow(4);
+	var y=x.insertCell(0);
+	y.innerHTML='Address 4: ' + result.Address5;
+  };
+</script>

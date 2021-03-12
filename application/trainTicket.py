@@ -32,7 +32,7 @@ class trainTicket:
                 self.type = 'CLP'
 
             if self.type == 'CLP':
-                if float(self.result[i]['cx']) / float(self.img.shape[0]) < 0.48:
+                if float(self.result[i]['cx']) / float(self.img.shape[0]) < 0.47:
                     continue
 
             relevant_res = re.findall('[一-龥]+地址',txt), re.findall('圖文+[一-龥]',txt), re.findall('Towngas',txt), re.findall('Water',txt)
@@ -57,7 +57,7 @@ class trainTicket:
         relevant_info = False
         for i in range(self.N):
             if self.type == 'CLP':
-                if float(self.result[i]['cx']) / float(self.img.shape[0]) < 0.48:
+                if float(self.result[i]['cx']) / float(self.img.shape[0]) < 0.47:
                     continue
 
             txt = self.result[i]['text'].replace(' ','')
@@ -89,7 +89,7 @@ class trainTicket:
         relevant_info = False
         for i in range(self.N):
             if self.type == 'CLP':
-                if float(self.result[i]['cx']) / float(self.img.shape[0]) < 0.48:
+                if float(self.result[i]['cx']) / float(self.img.shape[0]) < 0.47:
                     continue
 
             txt = self.result[i]['text'].replace(' ','')
@@ -116,7 +116,7 @@ class trainTicket:
         relevant_info = False
         for i in range(self.N):
             if self.type == 'CLP':
-                if float(self.result[i]['cx']) / float(self.img.shape[0]) < 0.48:
+                if float(self.result[i]['cx']) / float(self.img.shape[0]) < 0.47:
                     continue
 
             txt = self.result[i]['text'].replace(' ', '')
