@@ -14,7 +14,7 @@
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import sys
-
+import json
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, '../..')))
@@ -187,10 +187,48 @@ def main(args):
             txts = [rec_res[i][0] for i in range(len(rec_res))]
             scores = [rec_res[i][1] for i in range(len(rec_res))]
 
-            assorted_results = [{'box': dt_boxes[i], 'txt': rec_res[i][0]} for i in range(len(rec_res))]
-
-            res = trainTicket.trainTicket(assorted_results, img=image)
-            res = res.res
+            assorted_results = {"text_boxes":
+                                    [{'id': i + 1,
+                                      'bbox': [float(dt_boxes[i][0][0]), float(dt_boxes[i][0][1]), float(dt_boxes[i][2][0]), float(dt_boxes[i][2][1])],
+                                      'text': rec_res[i][0]} for i in range(len(rec_res))],
+                                "fields":
+                                    [{"field_name": "customer_number",
+                                      "value_id": [],
+                                      "value_text": [],
+                                      "key_id": [],
+                                      "key_text": []},
+                                     {"field_name": "name",
+                                      "value_id": [],
+                                      "value_text": [],
+                                      "key_id": [],
+                                      "key_text": []},
+                                     {"field_name": "address",
+                                      "value_id": [],
+                                      "value_text": [],
+                                      "key_id": [],
+                                      "key_text": []},
+                                     {"field_name": "amount",
+                                      "value_id": [],
+                                      "value_text": [],
+                                      "key_id": [],
+                                      "key_text": []},
+                                     {"field_name": "date",
+                                      "value_id": [],
+                                      "value_text": [],
+                                      "key_id": [],
+                                      "key_text": []},
+                                     {"field_name": "content",
+                                      "value_id": [],
+                                      "value_text": [],
+                                      "key_id": [],
+                                      "key_text": []}],
+                                "global_attributes": {
+                                    "file_id": image_file.split('/')[-1]}
+                                }
+            with open(image_file + '.json', 'w', encoding='utf-8') as outfile:
+                json.dump(assorted_results, outfile)
+            #res = trainTicket.trainTicket(assorted_results, img=image)
+            #res = res.res
 
             draw_img = draw_ocr_box_txt(
                 image,

@@ -16,7 +16,7 @@
   formElem.onsubmit = async (e) => {
     e.preventDefault();
 
-    let response = await fetch('http://localhost:8000', {
+    let response = await fetch('http://119.8.113.249:8000', {
       method: 'POST',
       body: new FormData(formElem)
     });
