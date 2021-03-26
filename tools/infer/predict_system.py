@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import sys
 
 __dir__ = os.path.dirname(os.path.abspath(__file__))

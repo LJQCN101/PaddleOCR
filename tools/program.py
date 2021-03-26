@@ -196,6 +196,7 @@ def train(config,
         train_reader_cost = 0.0
         batch_sum = 0
         batch_start = time.time()
+
         for idx, batch in enumerate(train_dataloader):
             train_reader_cost += time.time() - batch_start
             if idx >= len(train_dataloader):
@@ -299,6 +300,9 @@ def train(config,
             global_step += 1
             optimizer.clear_grad()
             batch_start = time.time()
+
+            if idx + 1 == len(train_dataloader):
+                break
         if dist.get_rank() == 0:
             save_model(
                 model,

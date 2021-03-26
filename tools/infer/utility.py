@@ -33,12 +33,12 @@ def parse_args():
     parser.add_argument("--ir_optim", type=str2bool, default=True)
     parser.add_argument("--use_tensorrt", type=str2bool, default=False)
     parser.add_argument("--use_fp16", type=str2bool, default=False)
-    parser.add_argument("--gpu_mem", type=int, default=500)
+    parser.add_argument("--gpu_mem", type=int, default=11000)
 
     # params for text detector
     parser.add_argument("--image_dir", type=str)
     parser.add_argument("--det_algorithm", type=str, default='DB')
-    parser.add_argument("--det_model_dir", type=str, default='./inference/ch_ppocr_server_v2.0_det_infer')
+    parser.add_argument("--det_model_dir", type=str)
     parser.add_argument("--det_limit_side_len", type=float, default=960)
     parser.add_argument("--det_limit_type", type=str, default='max')
 
@@ -61,7 +61,7 @@ def parse_args():
 
     # params for text recognizer
     parser.add_argument("--rec_algorithm", type=str, default='CRNN')
-    parser.add_argument("--rec_model_dir", type=str, default='./inference/ch_ppocr_server_v2.0_rec_infer')
+    parser.add_argument("--rec_model_dir", type=str)
     parser.add_argument("--rec_image_shape", type=str, default="3, 32, 320")
     parser.add_argument("--rec_char_type", type=str, default='ch')
     parser.add_argument("--rec_batch_num", type=int, default=6)
@@ -76,8 +76,8 @@ def parse_args():
     parser.add_argument("--drop_score", type=float, default=0.5)
 
     # params for text classifier
-    parser.add_argument("--use_angle_cls", type=str2bool, default=True)
-    parser.add_argument("--cls_model_dir", type=str, default='./inference/ch_ppocr_mobile_v2.0_cls_infer')
+    parser.add_argument("--use_angle_cls", type=str2bool, default=False)
+    parser.add_argument("--cls_model_dir", type=str)
     parser.add_argument("--cls_image_shape", type=str, default="3, 48, 192")
     parser.add_argument("--label_list", type=list, default=['0', '180'])
     parser.add_argument("--cls_batch_num", type=int, default=6)
@@ -129,7 +129,8 @@ def create_predictor(args, mode, logger):
             #config.set_mkldnn_op({'conv2d', 'depthwise_conv2d', 'pool2d', 'batch_norm'})
             args.rec_batch_num = 1
 
-    # config.enable_memory_optim()
+    # enable memory optim
+    config.enable_memory_optim()
     config.disable_glog_info()
 
     config.delete_pass("conv_transpose_eltwiseadd_bn_fuse_pass")
@@ -207,6 +208,49 @@ def draw_ocr(image,
         img = np.concatenate([np.array(img), np.array(txt_img)], axis=1)
         return img
     return image
+
+
+def clip_ground_truth_and_draw_txt(image, boxes, txts, scores=None, font_path="./doc/simfang.ttf"):
+    img_canvas = np.zeros([6000, 4980], dtype=np.uint8)
+    img_canvas.fill(255)
+    accumulated_height = 0
+    img_copy = image.copy()
+    for idx, (box, txt) in enumerate(zip(boxes, txts)):
+        box_height = math.sqrt((box[0][0] - box[3][0]) ** 2 + (box[0][1] - box[3][
+            1]) ** 2)
+        box_width = math.sqrt((box[0][0] - box[1][0]) ** 2 + (box[0][1] - box[1][
+            1]) ** 2)
+
+        if box_height > 2 * box_width:
+            font_size = max(int(box_width * 1.3), 10)
+            font = ImageFont.truetype(font_path, font_size, encoding="utf-8")
+        else:
+            font_size = max(int(box_height * 1.3), 10)
+            font = ImageFont.truetype(font_path, font_size, encoding="utf-8")
+
+        box_x_min = int(np.amin([box[0][0], box[1][0], box[2][0], box[3][0]]))
+        box_y_min = int(np.amin([box[0][1], box[1][1], box[2][1], box[3][1]]))
+        box_x_max = int(np.amax([box[0][0], box[1][0], box[2][0], box[3][0]]))
+        box_y_max = int(np.amax([box[0][1], box[1][1], box[2][1], box[3][1]]))
+
+
+        cropped_img = img_copy[box_y_min-3:box_y_max+3, box_x_min-3:box_x_max+3]
+        w = cropped_img.shape[1]
+        h = cropped_img.shape[0]
+
+        img_canvas[accumulated_height:accumulated_height+h, 0:w] = cropped_img
+
+        img_pil = Image.fromarray(img_canvas)
+        draw = ImageDraw.Draw(img_pil)
+        draw.text(
+            (box_x_max-box_x_min+26, accumulated_height), txt, font=font)
+        img_canvas = np.array(img_pil)
+
+        accumulated_height += (box_y_max - box_y_min + 16)
+
+    #cv2.imshow('img', img_canvas)
+    #cv2.waitKey()
+    return img_canvas
 
 
 def draw_ocr_box_txt(image,
