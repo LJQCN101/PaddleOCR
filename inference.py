@@ -139,6 +139,16 @@ def sorted_boxes(dt_boxes):
             tmp = _boxes[i]
             _boxes[i] = _boxes[i + 1]
             _boxes[i + 1] = tmp
+
+    for _box in _boxes:
+        _box[0][0] -= 3
+        _box[0][1] -= 3
+        _box[1][0] += 3
+        _box[1][1] -= 3
+        _box[2][0] += 3
+        _box[2][1] += 3
+        _box[3][0] -= 3
+        _box[3][1] += 3
     return _boxes
 
 
@@ -229,24 +239,24 @@ def main(args):
                 json.dump(assorted_results, outfile)
             #res = trainTicket.trainTicket(assorted_results, img=image)
             #res = res.res
-            compare_img = clip_ground_truth_and_draw_txt(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), boxes, txts, scores, font_path=font_path)
+            ##compare_img = clip_ground_truth_and_draw_txt(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), boxes, txts, scores, font_path=font_path)
 
-            # draw_img = draw_ocr_box_txt(
-            #     image,
-            #     boxes,
-            #     txts,
-            #     scores,
-            #     drop_score=drop_score,
-            #     font_path=font_path)
+            draw_img = draw_ocr_box_txt(
+                image,
+                boxes,
+                txts,
+                scores,
+                drop_score=drop_score,
+                font_path=font_path)
             draw_img_save = "./inference_results/"
             if not os.path.exists(draw_img_save):
                 os.makedirs(draw_img_save)
-            # cv2.imwrite(
-            #     os.path.join(draw_img_save, os.path.basename(image_file)),
-            #     draw_img[:, :, ::-1])
             cv2.imwrite(
                 os.path.join(draw_img_save, os.path.basename(image_file)),
-                compare_img)
+                draw_img[:, :, ::-1])
+            # cv2.imwrite(
+            #     os.path.join(draw_img_save, os.path.basename(image_file)),
+            #     compare_img)
             logger.info("The visualized image saved in {}".format(
                 os.path.join(draw_img_save, os.path.basename(image_file))))
 
